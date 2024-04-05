@@ -80,6 +80,11 @@ pub struct Cli {
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub no_registry_suggestions: bool,
 
+    /// Skip printing suggestions with trust hints
+    #[clap(long, action)]
+    #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
+    pub skip_suggestions_with_trust_hints: bool,
+
     /// How verbose logging should be (log level)
     #[clap(long, action)]
     #[clap(default_value_t = LevelFilter::WARN)]

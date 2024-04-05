@@ -2073,11 +2073,11 @@ impl<'a> ResolveReport<'a> {
     pub fn print_suggest_human(
         &self,
         out: &Arc<dyn Out>,
-        _cfg: &Config,
+        cfg: &Config,
         suggest: Option<&Suggest>,
     ) -> Result<(), std::io::Error> {
         if let Some(suggest) = suggest {
-            suggest.print_human(out, self)?;
+            suggest.print_human(out, cfg.cli.skip_suggestions_with_trust_hints, self)?;
         } else {
             // This API is only used for vet-suggest
             writeln!(out, "Nothing to suggest, you're fully audited!");
@@ -2248,6 +2248,7 @@ impl Suggest {
     pub fn print_human(
         &self,
         out: &Arc<dyn Out>,
+        skip_suggestions_with_trust_hints: bool,
         report: &ResolveReport<'_>,
     ) -> Result<(), std::io::Error> {
         for (criteria, suggestions) in &self.suggestions_by_criteria {
@@ -2308,6 +2309,10 @@ impl Suggest {
             );
             for (s0, s1, s2, s3, item) in strings {
                 let package = &report.graph.nodes[item.package];
+
+                if skip_suggestions_with_trust_hints && item.trust_hint.is_some() {
+                    continue;
+                }
 
                 write!(
                     out,
@@ -2401,7 +2406,7 @@ impl FailForVet {
         &self,
         out: &Arc<dyn Out>,
         report: &ResolveReport<'_>,
-        _cfg: &Config,
+        cfg: &Config,
         suggest: Option<&Suggest>,
     ) -> Result<(), std::io::Error> {
         writeln!(out, "Vetting Failed!");
@@ -2427,7 +2432,7 @@ impl FailForVet {
         // Suggest output generally requires hitting the network.
         if let Some(suggest) = suggest {
             writeln!(out);
-            suggest.print_human(out, report)?;
+            suggest.print_human(out, cfg.cli.skip_suggestions_with_trust_hints, report)?;
         }
 
         Ok(())
